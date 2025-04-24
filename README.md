@@ -1,5 +1,4 @@
 # LendaStackBackendAssessment - Currency Converter
-# LendaStack Currency Converter
 
 ## 📖 Overview
 
@@ -44,7 +43,7 @@ Use these test ApiKey to simulate authenticated operations (if applicable):
      dotnet build
     dotnet run --project src/LendaStackCurrencyConverter.API
 5. **Explore Swagger**
-   Navigate to https://localhost:<port>/swagger to explore and test API endpoints.
+   Navigate to https://localhost:port/swagger to explore and test API endpoints.
 
 🎯 Project Scope
 This project is part of a Take Home Assessment focused on demonstrating backend engineering capabilities.
