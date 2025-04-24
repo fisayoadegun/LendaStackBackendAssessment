@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FluentValidation;
+using LendastackCurrencyConverter.Core.Dto;
 
 namespace LendastackCurrencyConverter.Core.Features.ConvertCurrency
 {
-    using FluentValidation;
-    using LendastackCurrencyConverter.Core.Dto;
-
     public class ConvertCurrencyValidator : AbstractValidator<ConvertCurrencyCommand>
     {
         public ConvertCurrencyValidator()

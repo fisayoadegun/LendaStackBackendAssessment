@@ -1,4 +1,4 @@
-﻿using LendastackCurrencyConverter.Core.Dto;
+﻿using LendastackCurrencyConverter.Core.Dto.Response;
 using System;
 using System.Collections.Generic;
 using System.Linq;

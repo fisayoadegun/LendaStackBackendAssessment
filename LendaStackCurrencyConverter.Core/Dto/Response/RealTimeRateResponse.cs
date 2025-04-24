@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LendastackCurrencyConverter.Core.Dto
+namespace LendastackCurrencyConverter.Core.Dto.Response
 {
     public class RealTimeRateResponse
     {

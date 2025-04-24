@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using LendastackCurrencyConverter.Core.Dto;
+using LendastackCurrencyConverter.Core.Dto.Response;
 using LendastackCurrencyConverter.Infrastructure.Models;
 using System;
 using System.Collections.Generic;

@@ -10,5 +10,8 @@ namespace LendastackCurrencyConverter.Infrastructure.Interface
     public interface IExchangeRateRepository
     {
         Task<ExchangeRate> GetRealTimeExchangeRate(string baseCurrency, string targetCurrency);
+        Task<ExchangeRate> AddExchangeRate(ExchangeRate exchangeRate);
+        Task<List<ExchangeRate>> GetHistoricalRates(string baseCurrency, string targetCurrency, DateTime startDate, DateTime endDate);
+        Task<ExchangeRate> GetHistoricalExchangeRate(string baseCurrency, string targetCurrency, DateTime date);
     }
 }

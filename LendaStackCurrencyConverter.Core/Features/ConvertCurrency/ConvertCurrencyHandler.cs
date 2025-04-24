@@ -1,24 +1,50 @@
-﻿using LendastackCurrencyConverter.Core.Dto;
-using MediatR;
+﻿using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using LendastackCurrencyConverter.Infrastructure;
+using LendastackCurrencyConverter.Infrastructure.Interface;
+using LendastackCurrencyConverter.Core.Exceptions;
+using AutoMapper;
+using LendastackCurrencyConverter.Core.Dto.Response;
 
 namespace LendastackCurrencyConverter.Core.Features.ConvertCurrency
 {
     public class ConvertCurrencyHandler : IRequestHandler<ConvertCurrencyCommand, BaseResponse<ExchangeRateResponseDto>>
-    {        
-        public ConvertCurrencyHandler()
+    {    
+        private readonly IExchangeRateRepository _exchangeRateRepository;
+        private readonly IMapper _mapper;
+        public ConvertCurrencyHandler(IExchangeRateRepository exchangeRateRepository, IMapper mapper)
         {
-            
+            _exchangeRateRepository = exchangeRateRepository;
+            _mapper = mapper;
         }
 
-        public Task<BaseResponse<ExchangeRateResponseDto>> Handle(ConvertCurrencyCommand request, CancellationToken cancellationToken)
+        public async Task<BaseResponse<ExchangeRateResponseDto>> Handle(ConvertCurrencyCommand request, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var response = new BaseResponse<ExchangeRateResponseDto>();
+            try
+            {
+                var rate = await _exchangeRateRepository.GetRealTimeExchangeRate(request.ConvertRequest.BaseCurrency, request.ConvertRequest.TargetCurrency);
+                if (rate == null)
+                    throw new BadRequestException("No record found");
+                if(rate.Rate == 0)
+                    throw new BadRequestException("No record found");
+                var data = _mapper.Map<ExchangeRateResponseDto>(rate);
+                data.Amount = request.ConvertRequest.Amount;
+                data.ConvertedAmount = request.ConvertRequest.Amount * data.Rate;
+                response.Data = data;
+                response.Success = true;
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Error = ex.Message;
+                response.Success = false;
+                return response;
+            }
         }
     }
 }

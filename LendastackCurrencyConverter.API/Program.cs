@@ -1,60 +1,136 @@
 using AspNetCoreRateLimit;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using LendastackCurrencyConverter.Core.Helpers.Middleware;
 using LendastackCurrencyConverter.Core.Interfaces;
 using LendastackCurrencyConverter.Core.Services;
+using LendastackCurrencyConverter.Core.Services.Security;
 using LendastackCurrencyConverter.Infrastructure;
 using LendastackCurrencyConverter.Infrastructure.Interface;
 using LendastackCurrencyConverter.Infrastructure.Repository;
 using LendastackCurrencyConverter.Worker;
 using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
+using System.Reflection;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-builder.Services.AddMemoryCache();
-builder.Services.Configure<IpRateLimitOptions>(
-    builder.Configuration.GetSection("ApiKeyRateLimiting"));
-builder.Services.AddInMemoryRateLimiting();
-builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
-
-builder.Services.AddControllers();
-builder.Services.AddScoped<ICurrencyRateService, SimulatedCurrencyRateService>();
-builder.Services.AddScoped<IExchangeRateRepository, ExchangeRateRepository>();
-builder.Services.AddHostedService<RealTimeRateFetcher>();
-builder.Services.AddMediatR(AppDomain.CurrentDomain.GetAssemblies());
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-
-app.UseIpRateLimiting();
-
-app.Use(async (context, next) =>
+internal class Program
 {
-    var apiKey = context.Request.Headers["X-Api-Key"].FirstOrDefault();
-    var validKeys = builder.Configuration.GetSection("ApiKeys").Get<List<string>>();
-
-    if (apiKey == null || !validKeys.Contains(apiKey))
+    private static void Main(string[] args)
     {
-        context.Response.StatusCode = 401;
-        await context.Response.WriteAsync("API Key is missing or invalid.");
-        return;
+        var builder = WebApplication.CreateBuilder(args);
+
+        // Add services to the container.
+
+        builder.Services.AddDbContext<AppDbContext>(options =>
+            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+        builder.Services.AddMemoryCache();
+        builder.Services.Configure<IpRateLimitOptions>(
+            builder.Configuration.GetSection("ApiKeyRateLimiting"));
+        builder.Services.AddInMemoryRateLimiting();
+        builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+
+        builder.Services.AddControllers()
+             .AddFluentValidation(fv =>
+             {
+                 // Auto-register validators in the assembly
+                 fv.RegisterValidatorsFromAssemblyContaining<Program>();
+
+                 // Optional: disable built-in DataAnnotations model validation
+                 fv.DisableDataAnnotationsValidation = false;
+             });
+
+
+        builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+        builder.Services.AddFluentValidationAutoValidation();
+        builder.Services.AddScoped<ICurrencyRateService, SimulatedCurrencyRateService>();
+        builder.Services.AddScoped<IExchangeRateRepository, ExchangeRateRepository>();
+        builder.Services.AddHostedService<RealTimeRateFetcher>();
+        builder.Services.AddMediatR(AppDomain.CurrentDomain.GetAssemblies());
+        builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+        builder.Services.AddApiVersioning(options =>
+        {
+            options.AssumeDefaultVersionWhenUnspecified = true;
+            options.DefaultApiVersion = new ApiVersion(1, 0);
+            options.ReportApiVersions = true;
+        });
+
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen(c =>
+        {
+            c.SwaggerDoc("v1", new OpenApiInfo { Title = "Lendastack Currency Converter API", Version = "v1" });
+
+
+            c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+            {
+                Description = "API Key needed to access the endpoints.",
+                In = ParameterLocation.Header,
+                Name = "x-api-key",
+                Type = SecuritySchemeType.ApiKey,
+                Scheme = "ApiKeyScheme"
+            });
+
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "ApiKey"
+                }
+            },
+            new List<string>()
+        }
+            });
+        });
+
+
+        builder.Services.AddSingleton<IApiKeyValidator, ApiKeyValidator>();
+
+        builder.Logging.ClearProviders();
+        builder.Logging.AddConsole();
+
+
+
+
+        var app = builder.Build();
+
+        // Configure the HTTP request pipeline.
+
+        app.UseIpRateLimiting();
+
+
+        app.UseHttpsRedirection();
+
+        app.UseAuthorization();        
+
+        app.MapControllers();
+
+        app.UseSwagger();
+        app.UseSwaggerUI();
+
+        app.UseMiddleware<ApiKeyMiddleware>();
+
+        app.Use(async (context, next) =>
+        {
+            var apiKey = context.Request.Headers["X-Api-Key"].FirstOrDefault();
+            var validKeys = builder.Configuration.GetSection("ApiKeys").Get<List<string>>();
+
+            if (apiKey == null || !validKeys.Contains(apiKey))
+            {
+                context.Response.StatusCode = 401;
+                await context.Response.WriteAsync("API Key is missing or invalid.");
+                return;
+            }
+
+            await next();
+        });
+
+        app.Run();
     }
-
-    await next();
-});
-
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();
+}

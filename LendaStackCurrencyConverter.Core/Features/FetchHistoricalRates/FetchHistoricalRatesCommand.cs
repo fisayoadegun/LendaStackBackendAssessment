@@ -7,10 +7,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LendastackCurrencyConverter.Core.Features.ConvertCurrency
+namespace LendastackCurrencyConverter.Core.Features.FetchHistoricalRates
 {
-    public class ConvertCurrencyCommand : IRequest<BaseResponse<ExchangeRateResponseDto>>
+    public class FetchHistoricalRatesCommand : IRequest<BaseResponse<List<ExchangeRateResponseDto>>>
     {
-        public ConvertRequest ConvertRequest { get; set; }
+        public HistoricalRateRequest HistoricalRateRequest { get; set; }
     }
 }
