@@ -1,4 +1,4 @@
-# LendaStackBackendAssessment - Currency Converter
+# LendaStackBackendAssessment - LendaStack Currency Converter
 
 ## 📖 Overview
 
