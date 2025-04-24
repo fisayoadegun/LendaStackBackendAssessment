@@ -9,7 +9,7 @@ The **LendaStack Currency Converter** is a robust and extensible API built with 
 ## ✨ Highlights
 
 - **Clean Architecture:** Layered architecture ensuring separation of concerns, testability, and scalability.
-- **Security Middleware:** Middleware-based token validation and authorization to secure endpoints.
+- **Security:** ApiKey authorization to secure endpoints.
 - **Global Exception Handler:** Centralized error handling with consistent error responses for improved developer experience.
 - **EF Core + SQL Server:** Uses Entity Framework Core with SQL Server for reliable data access and storage.
 - **FluentValidation:** Applies strong validation rules on all request models using FluentValidation.
@@ -17,7 +17,6 @@ The **LendaStack Currency Converter** is a robust and extensible API built with 
 - **AutoMapper:** Simplifies DTO-to-entity conversions and vice versa.
 - **Serilog Logging:** Structured and file-based logging using Serilog for tracking application behavior and diagnostics.
 - **Unit & Integration Tests:** Comprehensive test suite using xUnit to ensure correctness and reliability.
-- **Performance Middleware:** Tracks execution time of requests and flags long-running operations.
 - **Data Seeding:** Pre-populated dummy data for test and demo purposes.
 
 ---
