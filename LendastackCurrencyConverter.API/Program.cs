@@ -16,7 +16,7 @@ using Microsoft.OpenApi.Models;
 using Serilog;
 using System.Reflection;
 
-internal class Program
+public class Program
 {
     private static void Main(string[] args)
     {
@@ -110,4 +110,5 @@ internal class Program
 
         app.Run();
     }
+
 }
