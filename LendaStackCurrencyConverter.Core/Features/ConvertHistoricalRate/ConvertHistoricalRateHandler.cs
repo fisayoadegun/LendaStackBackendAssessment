@@ -3,6 +3,7 @@ using LendastackCurrencyConverter.Core.Dto.Response;
 using LendastackCurrencyConverter.Core.Exceptions;
 using LendastackCurrencyConverter.Infrastructure.Interface;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,10 +16,12 @@ namespace LendastackCurrencyConverter.Core.Features.ConvertHistoricalRate
     {
         private readonly IExchangeRateRepository _exchangeRateRepository;
         private readonly IMapper _mapper;
-        public ConvertHistoricalRateHandler(IExchangeRateRepository exchangeRateRepository, IMapper mapper)
+        private readonly ILogger<ConvertHistoricalRateHandler> _logger;
+        public ConvertHistoricalRateHandler(IExchangeRateRepository exchangeRateRepository, IMapper mapper, ILogger<ConvertHistoricalRateHandler> logger)
         {
             _exchangeRateRepository = exchangeRateRepository;
             _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task<BaseResponse<ExchangeRateResponseDto>> Handle(ConvertHistoricalRateCommand request, CancellationToken cancellationToken)
@@ -28,7 +31,7 @@ namespace LendastackCurrencyConverter.Core.Features.ConvertHistoricalRate
             try
             {
                 var exchangeRate = await _exchangeRateRepository.GetHistoricalExchangeRate(request.HistoricalConvertRequest.BaseCurrency,
-                                        request.HistoricalConvertRequest.TargetCurrency, request.HistoricalConvertRequest.Date);
+                                        request.HistoricalConvertRequest.TargetCurrency, request.HistoricalConvertRequest.Date.Date);
                 if (exchangeRate == null)
                     throw new BadRequestException("No record found");
                 if (exchangeRate.Rate == 0)
@@ -45,6 +48,7 @@ namespace LendastackCurrencyConverter.Core.Features.ConvertHistoricalRate
             {
                 response.Error = ex.Message;
                 response.Success = false;
+                _logger.LogError($"{ex.Message}");
                 return response;
             }
         }

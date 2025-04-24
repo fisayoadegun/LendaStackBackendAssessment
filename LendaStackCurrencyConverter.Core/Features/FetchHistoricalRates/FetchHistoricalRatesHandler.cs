@@ -3,6 +3,7 @@ using LendastackCurrencyConverter.Core.Dto.Response;
 using LendastackCurrencyConverter.Core.Exceptions;
 using LendastackCurrencyConverter.Infrastructure.Interface;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace LendastackCurrencyConverter.Core.Features.FetchHistoricalRates
 {
@@ -10,10 +11,12 @@ namespace LendastackCurrencyConverter.Core.Features.FetchHistoricalRates
     {
         private readonly IExchangeRateRepository _exchangeRateRepository;
         private readonly IMapper _mapper;
-        public FetchHistoricalRatesHandler(IExchangeRateRepository exchangeRateRepository, IMapper mapper)
+        private readonly ILogger<FetchHistoricalRatesHandler> _logger;
+        public FetchHistoricalRatesHandler(IExchangeRateRepository exchangeRateRepository, IMapper mapper, ILogger<FetchHistoricalRatesHandler> logger)
         {
             _exchangeRateRepository = exchangeRateRepository;
             _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task<BaseResponse<List<ExchangeRateResponseDto>>> Handle(FetchHistoricalRatesCommand request, CancellationToken cancellationToken)
@@ -29,7 +32,8 @@ namespace LendastackCurrencyConverter.Core.Features.FetchHistoricalRates
                 var data = _mapper.Map<List<ExchangeRateResponseDto>>(exchangeRates);
 
                 response.Success = true;
-                response.Data = data;                
+                response.Data = data;
+                _logger.LogInformation("Historical Rates Fetched successfully");
                 return response;
 
             }
@@ -37,6 +41,7 @@ namespace LendastackCurrencyConverter.Core.Features.FetchHistoricalRates
             {
                 response.Success = false;
                 response.Error = ex.Message;
+                _logger.LogError($"{ex.Message}");
                 return response;
             }
         }

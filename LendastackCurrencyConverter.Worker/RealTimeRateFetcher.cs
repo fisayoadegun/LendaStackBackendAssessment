@@ -9,18 +9,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Azure.Core;
+using LendastackCurrencyConverter.Infrastructure.Interface;
 
 namespace LendastackCurrencyConverter.Worker
 {
     public class RealTimeRateFetcher : BackgroundService
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly ILogger<RealTimeRateFetcher> _logger;
+        private readonly ILogger<RealTimeRateFetcher> _logger;        
 
         public RealTimeRateFetcher(IServiceProvider serviceProvider, ILogger<RealTimeRateFetcher> logger)
         {
             _serviceProvider = serviceProvider;
-            _logger = logger;
+            _logger = logger;            
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -35,7 +37,16 @@ namespace LendastackCurrencyConverter.Worker
                 {
                     var rates = await rateService.GetRealTimeRatesAsync("USD");
                     foreach (var rate in rates.Rates)
-                    {
+                    {                        
+                        var duplicate =  db.ExchangeRates.Where(x => 
+                            x.BaseCurrency == "USD" &&
+                            x.TargetCurrency ==  rate.Key &&
+                            x.Date ==  DateTime.UtcNow.Date
+                        ).FirstOrDefault();
+
+                        if (duplicate != null)
+                            continue;
+
                         var entry = new ExchangeRate
                         {
                             BaseCurrency = "USD",
@@ -55,7 +66,7 @@ namespace LendastackCurrencyConverter.Worker
                     _logger.LogError(ex, "Error fetching real-time rates.");
                 }
 
-                await Task.Delay(TimeSpan.FromHours(1), stoppingToken); // hourly
+                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken); // hourly
             }
         }
     }

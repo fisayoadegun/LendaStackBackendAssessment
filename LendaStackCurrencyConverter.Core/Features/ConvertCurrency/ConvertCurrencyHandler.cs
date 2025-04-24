@@ -8,6 +8,7 @@ using LendastackCurrencyConverter.Infrastructure.Interface;
 using LendastackCurrencyConverter.Core.Exceptions;
 using AutoMapper;
 using LendastackCurrencyConverter.Core.Dto.Response;
+using Microsoft.Extensions.Logging;
 
 namespace LendastackCurrencyConverter.Core.Features.ConvertCurrency
 {
@@ -15,10 +16,12 @@ namespace LendastackCurrencyConverter.Core.Features.ConvertCurrency
     {    
         private readonly IExchangeRateRepository _exchangeRateRepository;
         private readonly IMapper _mapper;
-        public ConvertCurrencyHandler(IExchangeRateRepository exchangeRateRepository, IMapper mapper)
+        private readonly ILogger<ConvertCurrencyHandler> _logger;
+        public ConvertCurrencyHandler(IExchangeRateRepository exchangeRateRepository, IMapper mapper, ILogger<ConvertCurrencyHandler> logger)
         {
             _exchangeRateRepository = exchangeRateRepository;
             _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task<BaseResponse<ExchangeRateResponseDto>> Handle(ConvertCurrencyCommand request, CancellationToken cancellationToken)
@@ -43,6 +46,7 @@ namespace LendastackCurrencyConverter.Core.Features.ConvertCurrency
             {
                 response.Error = ex.Message;
                 response.Success = false;
+                _logger.LogError($"{ex.Message}");
                 return response;
             }
         }

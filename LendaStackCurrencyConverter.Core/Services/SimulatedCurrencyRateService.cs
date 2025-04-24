@@ -92,7 +92,7 @@ namespace LendastackCurrencyConverter.Core.Services
                 { new DateTime(2024, 12, 27), 0.79M },
                 { new DateTime(2024, 12, 28), 0.80M },
                 { new DateTime(2024, 12, 29), 0.81M },
-                { new DateTime(2022, 12, 30), 0.80M },
+                { new DateTime(2024, 12, 30), 0.80M },
                 { new DateTime(2024, 12, 31), 0.795M }
             };
 

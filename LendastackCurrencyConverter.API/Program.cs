@@ -13,6 +13,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using Serilog;
 using System.Reflection;
 
 internal class Program
@@ -31,18 +32,7 @@ internal class Program
             builder.Configuration.GetSection("ApiKeyRateLimiting"));
         builder.Services.AddInMemoryRateLimiting();
         builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
-
-        builder.Services.AddControllers()
-             .AddFluentValidation(fv =>
-             {
-                 // Auto-register validators in the assembly
-                 fv.RegisterValidatorsFromAssemblyContaining<Program>();
-
-                 // Optional: disable built-in DataAnnotations model validation
-                 fv.DisableDataAnnotationsValidation = false;
-             });
-
-
+        builder.Services.AddControllers();
         builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
         builder.Services.AddFluentValidationAutoValidation();
         builder.Services.AddScoped<ICurrencyRateService, SimulatedCurrencyRateService>();
@@ -92,11 +82,15 @@ internal class Program
 
         builder.Services.AddSingleton<IApiKeyValidator, ApiKeyValidator>();
 
+        var logger = new LoggerConfiguration()
+            .ReadFrom.Configuration(builder.Configuration)
+            .Enrich.FromLogContext()
+            .WriteTo.File("logs/lendastackcurrencyconverter-.txt", rollingInterval: RollingInterval.Day)
+            .CreateLogger();
         builder.Logging.ClearProviders();
+        builder.Logging.AddSerilog(logger);
+
         builder.Logging.AddConsole();
-
-
-
 
         var app = builder.Build();
 
@@ -112,24 +106,7 @@ internal class Program
         app.MapControllers();
 
         app.UseSwagger();
-        app.UseSwaggerUI();
-
-        app.UseMiddleware<ApiKeyMiddleware>();
-
-        app.Use(async (context, next) =>
-        {
-            var apiKey = context.Request.Headers["X-Api-Key"].FirstOrDefault();
-            var validKeys = builder.Configuration.GetSection("ApiKeys").Get<List<string>>();
-
-            if (apiKey == null || !validKeys.Contains(apiKey))
-            {
-                context.Response.StatusCode = 401;
-                await context.Response.WriteAsync("API Key is missing or invalid.");
-                return;
-            }
-
-            await next();
-        });
+        app.UseSwaggerUI();        
 
         app.Run();
     }

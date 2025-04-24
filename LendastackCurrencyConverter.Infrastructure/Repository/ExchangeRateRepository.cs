@@ -66,5 +66,14 @@ namespace LendastackCurrencyConverter.Infrastructure.Repository
             else
                 return null;
         }
+
+        public async Task<bool> ExistsAsync(string baseCurrency, string targetCurrency, DateTime date)
+        {
+            return await _context.ExchangeRates.AnyAsync(x =>
+                x.BaseCurrency == baseCurrency &&
+                x.TargetCurrency == targetCurrency &&
+                x.Date == date);
+        }
+
     }
 }

@@ -13,5 +13,7 @@ namespace LendastackCurrencyConverter.Infrastructure.Interface
         Task<ExchangeRate> AddExchangeRate(ExchangeRate exchangeRate);
         Task<List<ExchangeRate>> GetHistoricalRates(string baseCurrency, string targetCurrency, DateTime startDate, DateTime endDate);
         Task<ExchangeRate> GetHistoricalExchangeRate(string baseCurrency, string targetCurrency, DateTime date);
+
+        Task<bool> ExistsAsync(string baseCurrency, string targetCurrency, DateTime date);
     }
 }
