@@ -49,10 +49,25 @@ public class Program
         });
 
         builder.Services.AddEndpointsApiExplorer();
+        // Swagger Documentation Section
+        var info = new OpenApiInfo()
+        {
+            Title = "Lendastack Currency Converter API",
+            Version = "v1",
+            Description = "API for converting currencies using real-time exchange rates.",
+            Contact = new OpenApiContact()
+            {
+                Name = "Fisayo Adegun",
+                Email = "fisayoadegun@gmail.com"
+            }
+        };
         builder.Services.AddSwaggerGen(c =>
         {
             c.SwaggerDoc("v1", new OpenApiInfo { Title = "Lendastack Currency Converter API", Version = "v1" });
-
+            // Set the comments path for the Swagger JSON and UI.
+            var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+            c.IncludeXmlComments(xmlPath);
 
             c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
             {
@@ -95,6 +110,19 @@ public class Program
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger(u =>
+            {
+                u.RouteTemplate = "swagger/{documentName}/swagger.json";
+            });
+
+            app.UseSwaggerUI(c =>
+            {
+                c.RoutePrefix = "swagger";
+                c.SwaggerEndpoint(url: "/swagger/v1/swagger.json", name: "Lendastack Currency Converter");
+            });
+        }
 
         app.UseIpRateLimiting();
 
